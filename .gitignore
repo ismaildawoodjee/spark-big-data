@@ -1,0 +1,6 @@
+# Intellij stuff
+.idea
+.bsp
+
+# binaries
+target
