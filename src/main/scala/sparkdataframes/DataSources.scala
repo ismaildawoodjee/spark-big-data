@@ -17,6 +17,7 @@ object DataSources extends App {
     StructField("Horsepower", LongType),
     StructField("Weight_in_lbs", LongType),
     StructField("Acceleration", DoubleType),
+    //    StructField("Year", DateType),
     StructField("Year", StringType),
     StructField("Origin", StringType)
   ))
@@ -64,6 +65,7 @@ object DataSources extends App {
     .mode(SaveMode.Overwrite)
     .option("path", "src/main/resources/data/cars_dupe.json")
     .save()
+
   /**
    * cars_dupe.json is going to be a folder containing files
    * part-uid is the actual json data
@@ -71,4 +73,66 @@ object DataSources extends App {
    * .crc files to validate integrity of other files
    */
 
+  /**
+   * Reading JSON
+   * - if JSON has dates, can pass in "dateformat" option - Spark will parse it
+   * - allowSingleQuotes: Bool = treat single quotes the same way as double quotes
+   * - compression: uncompressed (default) | bzip2 | gzip | lz4 | snappy | deflate
+   * -
+   */
+  spark.read
+    .schema(carsSchema)
+    //    .option("dateformat", "YYYY-MM-dd") // only works with enforced schema - if Spark fails parsing, it will put null
+    .option("allowSingleQuotes", "true")
+    .option("compression", "uncompressed")
+    .json("src/main/resources/data/cars.json")
+
+  /**
+   * Reading CSV
+   * - header: Bool = if CSV has a header to specify first row header or not
+   * - sep (separator): , (default), \t, | (etc.)
+   */
+  val stocksSchema = StructType(Array(
+    StructField("symbol", StringType),
+    //    StructField("date", DateType),
+    StructField("date", StringType),
+    StructField("price", DoubleType),
+  ))
+  val stocksDF = spark.read
+    .schema(stocksSchema)
+    //    .option("dateformat", "MMM dd YYYY")
+    .option("header", "true")
+    .option("sep", ",")
+    .option("nullValue", "")
+    .csv("src/main/resources/data/stocks.csv")
+
+  stocksDF.show()
+
+  /**
+   * Parquet: open-source compressed binary data storage format (optimized for columnar data)
+   * Can specify .parquet("path/name.parquet")
+   * or can specify .save(path/name.parquet) since parquet is default data format for Spark
+   * Same folder structure as the cars.json folder will be created, but with 6x compression factor
+   */
+  carsDF.write
+    .mode(SaveMode.Overwrite)
+    .save("src/main/resources/data/cars.parquet")
+
+  /**
+   * Text files: every line in a single column will be considered a value
+   */
+  spark.read.text("src/main/resources/data/sampleTextFile.txt").show()
+
+  // reading from a remote database (like Postgres, MySQL)
+  // run the Postgres docker container first (adjusted port is 5433)
+  val employeesDF = spark.read
+    .format("jdbc")
+    .option("driver", "org.postgresql.Driver") // specifically a DB driver for postgres
+    .option("url", "jdbc:postgresql://localhost:5433/rtjvm") // DB URI
+    .option("user", "docker")
+    .option("password", "docker")
+    .option("dbtable", "public.employees") // table you want to read
+    .load()
+
+  employeesDF.show()
 }
