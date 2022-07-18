@@ -2,7 +2,7 @@ package sparklowlevel
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.SparkSession
 
 object WorkingWithRDDs extends App {
 
@@ -32,7 +32,7 @@ object WorkingWithRDDs extends App {
   val minMsft: StockValue = msftRDD.min() // is an action
 
   // reduce
-  val numbersRDD = sc.parallelize(1 to 1000_000)
+  val numbersRDD = sc.parallelize(1 to 1000000)
   println(numbersRDD.sum())
   println(numbersRDD.reduce(_ + _))
 
@@ -45,9 +45,9 @@ object WorkingWithRDDs extends App {
   // try writing this 30-partitioned RDD to a parquet file: going to have 30 parts
   // repartitioning is also expensive, as it involves shuffling data
   // BEST PRACTICE: partition early, then process that. Size of a partition should be between [10, 100]MB.
-  repartitionedStocksRDD.toDF().write
-    .mode(SaveMode.Overwrite)
-    .save("src/main/resources/data/stocks30.parquet")
+//  repartitionedStocksRDD.toDF().write
+//    .mode(SaveMode.Overwrite)
+//    .save("src/main/resources/data/stocks30.parquet")
 
   // coalesce - doesn't need shuffling
   val coalesceRDD = repartitionedStocksRDD.coalesce(15)

@@ -29,7 +29,7 @@ object RDDs extends App {
    */
 
   // 1 - parallelize: distribute a collection of numbers across multiple nodes
-  val numbers: Seq[Int] = 1 to 1000_000
+  val numbers: Seq[Int] = 1 to 1000000
   val numbersRDD: RDD[Int] = sc.parallelize(numbers)
 
   // 2 - reading from files: e.g. a CSV, read each line in a CSV, split by "," and then convert to a list
